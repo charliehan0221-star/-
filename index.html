@@ -607,13 +607,13 @@ function renderBoss() {
   document.getElementById('client-list').innerHTML = clientRows.join('');
 
   // 품목별 취합 — 일반 주문
-  const allProducts = Object.values(PRODUCTS_BY_CLIENT).flat();
+  const allProducts = [...PRODUCTS_DEFAULT, ...Object.values(PRODUCTS_BY_CLIENT).flat()];
   const uniqueProducts = [];
   const seenIds = new Set();
-  allProducts.forEach(p => { if (!seenIds.has(p.id)) { seenIds.add(p.id); uniqueProducts.push(p); } });
+  allProducts.forEach(p => { if (!seenIds.has(p.id.trim())) { seenIds.add(p.id.trim()); uniqueProducts.push(p); } });
 
   const summaryRows = Object.keys(totalQty).filter(k=>totalQty[k]>0).map(k => {
-    const found = uniqueProducts.find(p=>p.id===k);
+    const found = uniqueProducts.find(p=>p.id.trim()===k.trim());
     return `<div class="sum-row"><span class="sum-lbl">${found?found.name:k}</span><span class="sum-val">${totalQty[k]}박스</span></div>`;
   });
 
