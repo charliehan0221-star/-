@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>참사랑유통 발주 시스템</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;background:#f5f5f5;color:#222;font-size:16px}
+.tab-bar{display:flex;background:#fff;border-bottom:1px solid #e0e0e0;position:sticky;top:0;z-index:10}
+.tab{flex:1;text-align:center;padding:14px 0;font-size:14px;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent}
+.tab.on{color:#222;font-weight:700;border-bottom:2px solid #222}
+.section{display:none;padding:16px;max-width:480px;margin:0 auto}
+.section.on{display:block}
+.order-top{text-align:center;padding:20px 0 12px}
+.order-top .shop{font-size:13px;color:#888;margin-bottom:4px}
+.order-top .title{font-size:22px;font-weight:700;color:#222}
+.order-top .date{font-size:12px;color:#aaa;margin-top:4px}
+.field-label{font-size:13px;color:#666;margin-bottom:6px;font-weight:500}
+.client-select{width:100%;font-size:16px;padding:12px 14px;border:1px solid #ddd;border-radius:12px;background:#fff;color:#222;margin-bottom:12px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.search-box{width:100%;font-size:15px;padding:10px 14px;border:1px solid #ddd;border-radius:12px;background:#fff;color:#222;margin-bottom:10px;outline:none}
+.search-box:focus{border-color:#aaa}
+.product-card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;border:1px solid #ebebeb}
+.product-card.has-qty{border-color:#FAE100;background:#fffef0}
+.p-name{font-size:14px;font-weight:600;color:#222;line-height:1.4}
+.p-code{font-size:11px;color:#bbb;margin-top:1px}
+.qty-ctrl{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:10px}
+.qty-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid #ddd;background:#f5f5f5;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#444;-webkit-tap-highlight-color:transparent;user-select:none}
+.qty-btn:active{background:#e0e0e0}
+.qty-num{font-size:18px;font-weight:700;min-width:26px;text-align:center;color:#222}
+.qty-num.has-val{color:#1a73e8}
+.submit-btn{width:100%;padding:15px;font-size:17px;font-weight:700;border:none;border-radius:14px;background:#FAE100;color:#222;cursor:pointer;margin-top:10px;-webkit-tap-highlight-color:transparent;position:sticky;bottom:16px}
+.submit-btn:active{opacity:0.8}
+.submit-btn:disabled{background:#e0e0e0;color:#aaa;cursor:not-allowed}
+.cart-bar{background:#fff;border:1px solid #FAE100;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:none;font-size:13px;color:#666}
+.cart-bar strong{color:#222}
+.success-box{background:#e8f5e9;border-radius:16px;padding:32px 20px;text-align:center;margin-top:8px}
+.s-icon{font-size:48px;margin-bottom:12px}
+.s-title{font-size:18px;font-weight:700;color:#2e7d32;margin-bottom:6px}
+.s-sub{font-size:13px;color:#388e3c;line-height:1.7}
+.retry-btn{width:100%;padding:13px;font-size:15px;font-weight:600;border:1.5px solid #ddd;border-radius:14px;background:#fff;color:#444;cursor:pointer;margin-top:14px}
+.metric-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.metric{background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid #ebebeb}
+.metric .lbl{font-size:11px;color:#aaa;margin-bottom:3px}
+.metric .val{font-size:20px;font-weight:700;color:#222}
+.card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid #ebebeb}
+.card-title{font-size:14px;font-weight:600;color:#444;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.refresh-btn{font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#666;cursor:pointer}
+.order-item{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:14px}
+.order-item:last-child{border-bottom:none}
+.o-name{font-weight:600;color:#222}
+.o-detail{font-size:12px;color:#aaa;margin-top:3px;line-height:1.6}
+.o-time{font-size:11px;color:#bbb;margin-top:2px}
+.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;flex-shrink:0;margin-left:8px}
+.b-done{background:#e8f5e9;color:#2e7d32}
+.b-wait{background:#fff8e1;color:#f57c00}
+.sum-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid #f0f0f0}
+.sum-row:last-child{border-bottom:none;font-weight:700;font-size:14px}
+.sum-lbl{color:#666}
+.sum-val{color:#222;font-weight:600}
+.action-btn{width:100%;padding:14px;font-size:16px;font-weight:700;border:none;border-radius:14px;background:#FAE100;color:#222;cursor:pointer;margin-top:4px}
+.action-btn:active{opacity:0.8}
+.reset-btn{width:100%;padding:11px;font-size:14px;border:1.5px solid #ddd;border-radius:14px;background:#fff;color:#888;cursor:pointer;margin-top:8px}
+.kakao-wrap{background:#b2c7d9;border-radius:16px;padding:14px;margin-top:12px;display:none}
+.kakao-bubble{background:#fff;border-radius:4px 14px 14px 14px;padding:12px 14px;font-size:13px;line-height:1.8;color:#222;white-space:pre-wrap;word-break:keep-all}
+.copy-btn{margin-top:10px;padding:8px 18px;font-size:13px;border-radius:10px;border:none;background:#fff;color:#222;font-weight:600;cursor:pointer}
+.copied-msg{font-size:12px;color:#2e7d32;margin-left:8px;display:none;font-weight:600}
+.loading{text-align:center;padding:20px;color:#aaa;font-size:14px}
+.empty{text-align:center;padding:16px;color:#bbb;font-size:13px}
+.pw-screen{min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+.pw-icon{font-size:40px;margin-bottom:16px}
+.pw-title{font-size:18px;font-weight:700;color:#222;margin-bottom:6px}
+.pw-sub{font-size:13px;color:#888;margin-bottom:24px}
+.pw-input{width:100%;max-width:240px;font-size:20px;padding:12px 16px;border:2px solid #ddd;border-radius:12px;text-align:center;letter-spacing:6px;background:#fff;color:#222;outline:none}
+.pw-input:focus{border-color:#FAE100}
+.pw-btn{width:100%;max-width:240px;padding:13px;font-size:16px;font-weight:700;border:none;border-radius:12px;background:#FAE100;color:#222;cursor:pointer;margin-top:12px}
+.pw-error{font-size:13px;color:#e53935;margin-top:10px;display:none}
+.no-result{text-align:center;padding:20px;color:#bbb;font-size:13px}
+
+/* 피킹표 */
+.picking-table-wrap{overflow-x:auto;margin-bottom:10px}
+.picking-table{width:100%;border-collapse:collapse;font-size:12px;min-width:400px}
+.picking-table th{background:#222;color:#fff;padding:8px 10px;text-align:center;font-weight:600;white-space:nowrap}
+.picking-table th:first-child{text-align:left}
+.picking-table td{padding:7px 10px;border-bottom:1px solid #f0f0f0;text-align:center;color:#222}
+.picking-table td:first-child{text-align:left;font-size:13px;color:#333;font-weight:500}
+.picking-table tr:nth-child(even){background:#fafafa}
+.picking-table td.total-cell{font-weight:700;background:#fffef0}
+.picking-table tr.total-row td{background:#FAE100;font-weight:700;font-size:13px}
+.picking-table td.has-qty{color:#1a73e8;font-weight:600}
+.print-btn{width:100%;padding:13px;font-size:15px;font-weight:700;border:none;border-radius:14px;background:#222;color:#fff;cursor:pointer;margin-bottom:8px}
+
+@media print {
+  .tab-bar, .no-print{display:none !important}
+  .section{display:block !important;padding:0;max-width:100%}
+  #sec-picking{display:block !important}
+  #sec-order, #sec-upload, #sec-boss{display:none !important}
+  body{background:#fff;font-size:12px}
+  .picking-table{font-size:11px}
+  .picking-table th{background:#333 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .picking-table tr.total-row td{background:#FFD700 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <button class="tab on" onclick="showTab('order')">📦 주문 입력</button>
+  <button class="tab" onclick="showTab('upload')">📎 발주서 업로드</button>
+  <button class="tab" onclick="showTab('boss')">📊 취합 현황</button>
+  <button class="tab" onclick="showTab('picking')">📋 피킹표</button>
+</div>
+
+<!-- 여사님 화면 -->
+<div id="sec-order" class="section on">
+  <div id="order-form">
+    <div class="order-top">
+      <div class="shop">매일유업 참사랑유통</div>
+      <div class="title">발주 주문 입력</div>
+      <div class="date" id="order-date"></div>
+    </div>
+    <div class="field-label">거래처 선택</div>
+    <select class="client-select" id="client-select" onchange="onClientChange()">
+      <option value="">-- 선택하세요 --</option>
+    </select>
+    <!-- 거래처 선택 전 안내 -->
+    <div id="select-hint" style="text-align:center;padding:30px 0;color:#bbb;font-size:14px">
+      거래처를 선택해 주세요
+    </div>
+    <!-- 비밀번호 입력 -->
+    <div id="order-pw-gate" style="display:none">
+      <div class="pw-screen">
+        <div class="pw-icon">🔒</div>
+        <div class="pw-title" id="order-pw-title"></div>
+        <div class="pw-sub">비밀번호를 입력해 주세요</div>
+        <input class="pw-input" type="password" id="order-pw-input" maxlength="10" placeholder="****"
+          onkeydown="if(event.key==='Enter') checkOrderPw()">
+        <button class="pw-btn" onclick="checkOrderPw()">확인</button>
+        <div class="pw-error" id="order-pw-error">비밀번호가 틀렸습니다</div>
+      </div>
+    </div>
+    <!-- 품목 영역 -->
+    <div id="product-area" style="display:none">
+      <div id="cart-bar" class="cart-bar"></div>
+      <input class="search-box" id="search-box" type="text" placeholder="🔍 품목 검색..." oninput="renderProducts()">
+      <div id="products"></div>
+      <button class="submit-btn" id="submit-btn" onclick="submitOrder()">주문 제출하기</button>
+    </div>
+  </div>
+  <div id="order-success" style="display:none">
+    <div class="order-top">
+      <div class="shop">매일유업 참사랑유통</div>
+      <div class="title">발주 주문 입력</div>
+      <div class="date" id="order-date2"></div>
+    </div>
+    <div class="success-box">
+      <div class="s-icon">✅</div>
+      <div class="s-title">주문이 접수되었습니다!</div>
+      <div class="s-sub" id="success-detail"></div>
+    </div>
+    <button class="retry-btn" onclick="resetOrder()">다시 입력하기</button>
+  </div>
+</div>
+
+<!-- 발주서 업로드 화면 -->
+<div id="sec-upload" class="section">
+  <div class="order-top">
+    <div class="shop">매일유업 참사랑유통</div>
+    <div class="title">발주서 업로드</div>
+    <div class="date" id="upload-date"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">거래처 선택</div>
+    <select class="client-select" id="upload-client" style="margin-bottom:0">
+      <option value="">-- 선택하세요 --</option>
+      <option>트레이더스</option>
+      <option>롯데식품관</option>
+      <option>평촌킴스</option>
+      <option>산본킴스</option>
+      <option>이마트(산본)</option>
+      <option>이마트(의왕)</option>
+      <option>이마트(안양)</option>
+      <option>백화점(평촌)</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-title">엑셀 발주서 첨부</div>
+    <label id="upload-label" style="display:block;border:2px dashed #ddd;border-radius:12px;padding:30px;text-align:center;cursor:pointer;color:#aaa;font-size:14px">
+      <div style="font-size:32px;margin-bottom:8px">📎</div>
+      <div>여기를 눌러 파일 선택</div>
+      <div style="font-size:12px;margin-top:4px">.xls, .xlsx 파일</div>
+      <input type="file" id="upload-input" accept=".xls,.xlsx" style="display:none" onchange="onFileSelect(this)">
+    </label>
+    <div id="upload-filename" style="font-size:13px;color:#1a73e8;margin-top:8px;display:none"></div>
+  </div>
+
+  <div id="upload-result" style="display:none">
+    <div class="card">
+      <div class="card-title">인식된 품목 <span id="recog-count" style="font-weight:400;font-size:12px;color:#aaa"></span></div>
+      <div id="recog-list"></div>
+    </div>
+    <button class="action-btn" onclick="saveUploadOrder()">취합 현황에 추가</button>
+  </div>
+
+  <div id="upload-loading" style="display:none;text-align:center;padding:30px;color:#aaa;font-size:14px">
+    <div style="font-size:32px;margin-bottom:8px">🤖</div>
+    AI가 발주서를 읽는 중...
+  </div>
+  <div id="upload-error" style="display:none;background:#fce8e8;border-radius:12px;padding:14px;font-size:13px;color:#c62828;margin-top:8px"></div>
+</div>
+
+<!-- 피킹표 화면 -->
+<div id="sec-picking" class="section">
+  <div class="order-top no-print">
+    <div class="shop">매일유업 참사랑유통</div>
+    <div class="title">피킹표</div>
+    <div class="date" id="picking-date"></div>
+  </div>
+  <button class="print-btn no-print" onclick="window.print()">🖨️ 인쇄하기</button>
+  <div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:8px;display:none" id="picking-print-title">
+    매일유업 참사랑유통 — 피킹표
+  </div>
+  <div style="text-align:center;font-size:13px;color:#888;margin-bottom:14px;display:none" id="picking-print-date"></div>
+  <div class="card" style="padding:10px">
+    <div class="picking-table-wrap">
+      <table class="picking-table" id="picking-table">
+        <thead id="picking-thead"></thead>
+        <tbody id="picking-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="picking-empty" class="empty" style="display:none">주문 데이터가 없습니다</div>
+</div>
+
+<!-- 사장님 화면 -->
+<div id="sec-boss" class="section">
+  <div id="pw-gate">
+    <div class="pw-screen">
+      <div class="pw-icon">🔒</div>
+      <div class="pw-title">사장님 전용 화면</div>
+      <div class="pw-sub">비밀번호를 입력해 주세요</div>
+      <input class="pw-input" type="password" id="pw-input" maxlength="10" placeholder="****"
+        onkeydown="if(event.key==='Enter') checkPw()">
+      <button class="pw-btn" onclick="checkPw()">확인</button>
+      <div class="pw-error" id="pw-error">비밀번호가 틀렸습니다</div>
+    </div>
+  </div>
+  <div id="boss-content" style="display:none">
+    <div class="card" style="padding:10px 14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:13px;color:#666;flex-shrink:0">날짜 선택</span>
+        <select id="date-select" onchange="loadOrders()" style="flex:1;font-size:13px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#222">
+          <option value="">오늘</option>
+        </select>
+        <button class="refresh-btn" onclick="loadOrders()">🔄 새로고침</button>
+      </div>
+    </div>
+    <div class="metric-row" id="metrics"></div>
+    <div class="card">
+      <div class="card-title">
+        거래처별 주문 현황
+      </div>
+      <div id="client-list"><div class="loading">불러오는 중...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">품목별 취합 수량</div>
+      <div id="summary-list"><div class="loading">불러오는 중...</div></div>
+    </div>
+    <button class="action-btn" onclick="genKakao()">📋 카톡 발주 메시지 생성</button>
+    <button class="reset-btn" onclick="resetAll()">이번 회차 초기화</button>
+    <button class="reset-btn" style="margin-top:4px;color:#aaa" onclick="lockBoss()">🔒 잠금</button>
+    <div class="kakao-wrap" id="kakao-box">
+      <div class="kakao-bubble" id="kakao-text"></div>
+      <div>
+        <button class="copy-btn" onclick="copyKakao()">메시지 복사</button>
+        <span class="copied-msg" id="copied-msg">복사됨! ✓</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbxoI3CvcDbUMfpffDQl5fnq5GM6KNHVHU4AtROS18aJL4AD6Mj8BjXc4Ra_yD7TX9lvZg/exec';
+const BOSS_PASSWORD = '1234';
+const CLIENT_PASSWORD = '1234';
+const CLIENTS = ['평촌킴스','산본킴스','이마트(산본)','이마트(의왕)','이마트(안양)','백화점(평촌)'];
+
+const PRODUCTS_DEFAULT = [
+  {id:"772874", name:"엣지 오리지널900ml"},
+  {id:"020968", name:"엣지 오리지널900ml*2입"},
+  {id:"023617", name:"소화가잘되는우유930ml*2"},
+  {id:"102398", name:"소화가잘되는우유930ml"},
+  {id:"752197", name:"소화가잘되는우유저지방930ml"},
+  {id:"768136", name:"매일 소화가잘되는우유 190ml*6"},
+  {id:"023938", name:"유기농우유900ml"},
+  {id:"023921", name:"유기농우유900ml(저지방)"},
+  {id:"032862", name:"유기농 오리지널125ml*4입"},
+  {id:"032916", name:"유기농 바나나125ml*4입"},
+  {id:"032909", name:"유기농 딸기125ml*4입"},
+  {id:"033203", name:"유기농쥬스 사과/오렌지/케일125ml*4"},
+  {id:"033234", name:"유기농쥬스 사과/딸기/케일125ml*4"},
+  {id:"759424", name:"유기농200ml*6입"},
+  {id:"764749", name:"유기농요구르트400g"},
+  {id:"767894", name:"매일바이오플레인450g*2입"},
+  {id:"038093", name:"그릭400g*2"},
+  {id:"510100", name:"매일바이오딸기85g*4입"},
+  {id:"763773", name:"매일바이오블루베리85g*4입"},
+  {id:"768242", name:"매일바이오 스위트85g*4입"},
+  {id:"035276", name:"그릭 80g*4"},
+  {id:"037720", name:"바나나는하얗다6입"},
+  {id:"048924", name:"그릭 드링킹 무가당플레인 710ml"},
+  {id:"048962", name:"그릭 드링킹 바나나 710ml"},
+  {id:"044162", name:"매일 바이오 제로 190ml*6"},
+  {id:"040645", name:"바이오 딸기 400g"},
+  {id:"041116", name:"바이오 복숭아 400g"},
+  {id:"772416", name:"매일 엔요 100ml*10입"},
+  {id:"046258", name:"그릭 요거트 togo 허니"},
+  {id:"046098", name:"그릭 요거트 togo 플레인"},
+  {id:"045589", name:"그릭 요거트 사과케일 120g*2"},
+  {id:"045619", name:"그릭 요거트 블루케일 120g*2"},
+  {id:"020012", name:"까페라떼 로슈거220*2"},
+  {id:"103937", name:"까페라떼 마일드220*2"},
+  {id:"761823", name:"바리스타 로슈거라떼 250ml"},
+  {id:"107942", name:"바리스타모카프레소라떼 250ml"},
+  {id:"040416", name:"바리스타 돌체라떼325ml"},
+  {id:"771402", name:"바리스타325ml 바닐라빈"},
+  {id:"768167", name:"바리스타 325ml 드립라떼"},
+  {id:"036174", name:"어메이징오트 바리스타950"},
+  {id:"030974", name:"아몬드브리즈언스위트190ml*6"},
+  {id:"030660", name:"아몬드브리즈오리지널190ml*6"},
+  {id:"763964", name:"아몬드 브리즈 무당950ml"},
+  {id:"763957", name:"아몬드 브리즈 오리지널950ml"},
+  {id:"107966", name:"휘핑크림 250ml"},
+  {id:"112809", name:"허쉬초코드링크235ml4입"},
+  {id:"031667", name:"얼려먹는 아이스크림 밀크6입"},
+  {id:"034927", name:"얼려먹는 아이스크림 초코6입"},
+  {id:"043554", name:"얼려먹는 엔요 6입"},
+  {id:"047903", name:"얼려먹는 아이스크림 허쉬6입"},
+];
+
+const PRODUCTS_BY_CLIENT = {
+  '평촌킴스': PRODUCTS_DEFAULT,
+  '산본킴스': [],
+  '이마트(산본)': [],
+  '이마트(의왕)': [],
+  '이마트(안양)': [],
+  '백화점(평촌)': [],
+};
+
+function getProducts() {
+  const client = document.getElementById('client-select') ? document.getElementById('client-select').value : '';
+  return PRODUCTS_BY_CLIENT[client] || [];
+}
+
+let qty = {};
+let serverOrders = {};
+
+const now = new Date();
+const days = ['일','월','화','수','목','금','토'];
+const dateStr = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+
+function onClientChange() {
+  const client = document.getElementById('client-select').value;
+  document.getElementById('select-hint').style.display = client ? 'none' : 'block';
+  document.getElementById('order-pw-gate').style.display = client ? 'block' : 'none';
+  document.getElementById('product-area').style.display = 'none';
+  document.getElementById('order-pw-input').value = '';
+  document.getElementById('order-pw-error').style.display = 'none';
+  if (client) document.getElementById('order-pw-title').textContent = client;
+  getProducts().forEach(p => qty[p.id] = 0);
+  renderProducts();
+}
+
+function checkOrderPw() {
+  if (document.getElementById('order-pw-input').value === CLIENT_PASSWORD) {
+    document.getElementById('order-pw-gate').style.display = 'none';
+    document.getElementById('product-area').style.display = 'block';
+    const prods = getProducts();
+    if (prods.length === 0) {
+      document.getElementById('products').innerHTML = '<div class="no-result" style="padding:30px 0;text-align:center;color:#bbb;font-size:14px">품목이 아직 등록되지 않았습니다</div>';
+    } else {
+      renderProducts();
+    }
+  } else {
+    document.getElementById('order-pw-error').style.display = 'block';
+    document.getElementById('order-pw-input').value = '';
+    setTimeout(()=>document.getElementById('order-pw-error').style.display='none', 2000);
+  }
+}
+
+function init() {
+  getProducts().forEach(p => qty[p.id] = 0);
+  document.getElementById('order-date').textContent = dateStr;
+  document.getElementById('order-date2').textContent = dateStr;
+  document.getElementById('upload-date').textContent = dateStr;
+  document.getElementById('picking-date').textContent = dateStr;
+  const sel = document.getElementById('client-select');
+  sel.innerHTML = '<option value="">-- 선택하세요 --</option>';
+  CLIENTS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+  renderProducts();
+}
+
+function renderProducts() {
+  const kw = document.getElementById('search-box').value.trim().toLowerCase();
+  const filtered = getProducts().filter(p => !kw || p.name.toLowerCase().includes(kw) || p.id.includes(kw));
+  if (filtered.length === 0) {
+    document.getElementById('products').innerHTML = '<div class="no-result">검색 결과가 없습니다</div>';
+    return;
+  }
+  document.getElementById('products').innerHTML = filtered.map(p => `
+    <div class="product-card ${qty[p.id]>0?'has-qty':''}" id="card-${p.id}">
+      <div style="flex:1;min-width:0">
+        <div class="p-name">${p.name}</div>
+        <div class="p-code">${p.id}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" ontouchstart="" onclick="changeQty('${p.id}',-1)">−</button>
+        <div class="qty-num ${qty[p.id]>0?'has-val':''}" id="q-${p.id}">${qty[p.id]}</div>
+        <button class="qty-btn" ontouchstart="" onclick="changeQty('${p.id}',1)">+</button>
+      </div>
+    </div>
+  `).join('');
+  updateCartBar();
+}
+
+function changeQty(id, delta) {
+  qty[id] = Math.max(0, (qty[id]||0) + delta);
+  const numEl = document.getElementById('q-'+id);
+  const cardEl = document.getElementById('card-'+id);
+  if (numEl) {
+    numEl.textContent = qty[id];
+    numEl.className = 'qty-num' + (qty[id]>0?' has-val':'');
+  }
+  if (cardEl) cardEl.className = 'product-card' + (qty[id]>0?' has-qty':'');
+  updateCartBar();
+}
+
+function updateCartBar() {
+  const items = getProducts().filter(p=>qty[p.id]>0);
+  const bar = document.getElementById('cart-bar');
+  if (items.length === 0) {
+    bar.style.display = 'none';
+  } else {
+    bar.style.display = 'block';
+    bar.innerHTML = `<strong>선택된 품목 ${items.length}개</strong> · 총 ${items.reduce((s,p)=>s+qty[p.id],0)}박스`;
+  }
+}
+
+async function submitOrder() {
+  const client = document.getElementById('client-select').value;
+  if (!client) { alert('거래처를 선택해주세요.'); return; }
+  const selectedItems = getProducts().filter(p=>qty[p.id]>0);
+  if (selectedItems.length === 0) { alert('주문할 품목을 선택해주세요.'); return; }
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '전송 중...';
+  const orderData = {client};
+  selectedItems.forEach(p => orderData[p.id.trim()] = qty[p.id]);
+  try {
+    await fetch(API, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(orderData)
+    });
+    document.getElementById('order-form').style.display = 'none';
+    document.getElementById('order-success').style.display = 'block';
+    const detail = selectedItems.map(p=>`${p.name} ${qty[p.id]}박스`).join('\n');
+    document.getElementById('success-detail').textContent = `${client}\n\n${detail}`;
+  } catch(err) {
+    alert('전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
+    btn.disabled = false; btn.textContent = '주문 제출하기';
+  }
+}
+
+function resetOrder() {
+  getProducts().forEach(p => qty[p.id] = 0);
+  document.getElementById('client-select').value = '';
+  document.getElementById('search-box').value = '';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-btn').textContent = '주문 제출하기';
+  document.getElementById('product-area').style.display = 'none';
+  document.getElementById('order-pw-gate').style.display = 'none';
+  document.getElementById('select-hint').style.display = 'block';
+  renderProducts();
+  document.getElementById('order-form').style.display = 'block';
+  document.getElementById('order-success').style.display = 'none';
+}
+
+function checkPw() {
+  if (document.getElementById('pw-input').value === BOSS_PASSWORD) {
+    document.getElementById('pw-gate').style.display = 'none';
+    document.getElementById('boss-content').style.display = 'block';
+    loadOrders();
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    setTimeout(()=>document.getElementById('pw-error').style.display='none', 2000);
+  }
+}
+
+function lockBoss() {
+  document.getElementById('pw-input').value = '';
+  document.getElementById('boss-content').style.display = 'none';
+  document.getElementById('pw-gate').style.display = 'block';
+  document.getElementById('kakao-box').style.display = 'none';
+}
+
+async function loadOrders() {
+  document.getElementById('client-list').innerHTML = '<div class="loading">불러오는 중...</div>';
+  document.getElementById('summary-list').innerHTML = '<div class="loading">불러오는 중...</div>';
+  try {
+    const selectedDate = document.getElementById('date-select').value;
+    const url = API + '?t=' + Date.now() + (selectedDate ? '&date=' + selectedDate : '');
+    const res = await fetch(url);
+    const data = await res.json();
+    serverOrders = data.orders || {};
+
+    // 날짜 목록 업데이트
+    const dateSelect = document.getElementById('date-select');
+    const currentVal = dateSelect.value;
+    dateSelect.innerHTML = '<option value="">오늘</option>';
+    (data.dates || []).forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d;
+      if (d === currentVal) opt.selected = true;
+      dateSelect.appendChild(opt);
+    });
+
+    renderBoss();
+  } catch(err) {
+    document.getElementById('client-list').innerHTML = '<div class="empty">데이터를 불러오지 못했습니다.</div>';
+  }
+}
+
+function renderBoss() {
+  const submitted = CLIENTS.filter(c => serverOrders[c]);
+  const totalQty = {};
+
+  // 일반 주문 (구글 시트)
+  submitted.forEach(c => {
+    const o = serverOrders[c];
+    Object.keys(o).forEach(k => {
+      if (k !== 'time') {
+        const cleanKey = k.trim();
+        totalQty[cleanKey] = (totalQty[cleanKey]||0) + Number(o[k]||0);
+      }
+    });
+  });
+
+  // 업로드 발주서 품목 목록 (이름:수량 단위 형식으로 별도 관리)
+  const uploadSummary = {};
+  Object.keys(uploadedOrders).forEach(c => {
+    uploadedOrders[c].items.forEach(p => {
+      const key = p.name;
+      if (!uploadSummary[key]) uploadSummary[key] = {qty:0, unit:p.unit||''};
+      uploadSummary[key].qty += p.qty;
+    });
+  });
+
+  const totalUploadQty = Object.values(uploadSummary).reduce((s,v)=>s+v.qty, 0);
+  const totalBoxes = Object.values(totalQty).reduce((a,b)=>a+b,0) + totalUploadQty;
+  const uploadClients = Object.keys(uploadedOrders);
+  const allClients = [...new Set([...CLIENTS, ...uploadClients])];
+  const totalSubmitted = submitted.length + uploadClients.length;
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="lbl">전체 거래처</div><div class="val">${allClients.length}곳</div></div>
+    <div class="metric"><div class="lbl">주문 접수</div><div class="val">${totalSubmitted}곳</div></div>
+    <div class="metric"><div class="lbl">총 수량</div><div class="val">${totalBoxes}</div></div>
+  `;
+
+  // 거래처별 현황 — 일반 거래처
+  const clientRows = CLIENTS.map(c => {
+    const done = !!serverOrders[c];
+    const o = serverOrders[c]||{};
+    const items = PRODUCTS_DEFAULT.filter(p=>Number(o[p.id.trim()]||o[p.id]||0)>0).map(p=>`${p.name} ${o[p.id.trim()]||o[p.id]}`).join(', ');
+    return `<div class="order-item">
+      <div style="flex:1;min-width:0">
+        <div class="o-name">${c}</div>
+        ${done?`<div class="o-detail">${items}</div>`:''}
+        ${o.time?`<div class="o-time">${o.time}</div>`:''}
+      </div>
+      <span class="badge ${done?'b-done':'b-wait'}">${done?'접수 완료':'대기 중'}</span>
+    </div>`;
+  });
+
+  // 업로드 거래처 행
+  uploadClients.forEach(c => {
+    const u = uploadedOrders[c];
+    const detail = u.items.map(p=>`${p.name} ${p.qty}${p.unit||''}`).join(', ');
+    clientRows.push(`<div class="order-item">
+      <div style="flex:1;min-width:0">
+        <div class="o-name">${c} <span style="font-size:11px;background:#E6F1FB;color:#185FA5;padding:1px 6px;border-radius:10px;font-weight:600">발주서</span></div>
+        <div class="o-detail">${detail}</div>
+        <div class="o-time">${u.time}</div>
+      </div>
+      <span class="badge b-done">접수 완료</span>
+    </div>`);
+  });
+
+  document.getElementById('client-list').innerHTML = clientRows.join('');
+
+  // 품목별 취합 — 일반 주문
+  const allProducts = Object.values(PRODUCTS_BY_CLIENT).flat();
+  const uniqueProducts = [];
+  const seenIds = new Set();
+  allProducts.forEach(p => { if (!seenIds.has(p.id)) { seenIds.add(p.id); uniqueProducts.push(p); } });
+
+  const summaryRows = Object.keys(totalQty).filter(k=>totalQty[k]>0).map(k => {
+    const found = uniqueProducts.find(p=>p.id===k);
+    return `<div class="sum-row"><span class="sum-lbl">${found?found.name:k}</span><span class="sum-val">${totalQty[k]}박스</span></div>`;
+  });
+
+  // 업로드 품목 추가
+  Object.keys(uploadSummary).forEach(name => {
+    const v = uploadSummary[name];
+    summaryRows.push(`<div class="sum-row"><span class="sum-lbl">${name}</span><span class="sum-val">${v.qty}${v.unit||'개'}</span></div>`);
+  });
+
+  document.getElementById('summary-list').innerHTML = summaryRows.length === 0
+    ? '<div class="empty">아직 주문이 없습니다</div>'
+    : summaryRows.join('') + `<div class="sum-row"><span class="sum-lbl">합계</span><span class="sum-val">${totalBoxes}</span></div>`;
+}
+
+function genKakao() {
+  const submitted = CLIENTS.filter(c => serverOrders[c]);
+  const totalQty = {};
+  submitted.forEach(c => {
+    const o = serverOrders[c];
+    Object.keys(o).forEach(k => {
+      if (k !== 'time') totalQty[k] = (totalQty[k]||0) + Number(o[k]||0);
+    });
+  });
+  const totalBoxes = Object.values(totalQty).reduce((a,b)=>a+b,0);
+  const allProducts2 = Object.values(PRODUCTS_BY_CLIENT).flat();
+  const uniqueProducts2 = [];
+  const seenIds2 = new Set();
+  allProducts2.forEach(p => { if (!seenIds2.has(p.id)) { seenIds2.add(p.id); uniqueProducts2.push(p); } });
+  const lines = Object.keys(totalQty).filter(k=>totalQty[k]>0).map(k => {
+    const found = uniqueProducts2.find(p=>p.id===k);
+    return `• ${found ? found.name : k} : ${totalQty[k]}박스`;
+  }).join('\n');
+  const msg = `[발주 요청] 참사랑유통\n${dateStr}\n\n■ 품목별 수량\n${lines}\n\n■ 합계 : ${totalBoxes}박스\n\n확인 후 회신 부탁드립니다.\n감사합니다.`;
+  document.getElementById('kakao-text').textContent = msg;
+  document.getElementById('kakao-box').style.display = 'block';
+  document.getElementById('kakao-box').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function copyKakao() {
+  const text = document.getElementById('kakao-text').textContent;
+  navigator.clipboard.writeText(text).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+  });
+  const m=document.getElementById('copied-msg');
+  m.style.display='inline';
+  setTimeout(()=>m.style.display='none',2500);
+}
+
+async function resetAll() {
+  if (!confirm('이번 회차 주문을 초기화할까요?\n구글 시트 데이터는 직접 지워주세요.')) return;
+  serverOrders={};
+  document.getElementById('kakao-box').style.display='none';
+  renderBoss();
+}
+
+function showTab(t) {
+  ['order','upload','boss','picking'].forEach(s => {
+    document.getElementById('sec-'+s).classList.toggle('on', s===t);
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('on', ['order','upload','boss','picking'][i]===t));
+  if (t === 'boss' && document.getElementById('boss-content').style.display !== 'none') renderBoss();
+  if (t === 'picking') renderPicking();
+}
+
+function renderPicking() {
+  // 모든 거래처 목록 수집
+  const allClients = [];
+  CLIENTS.forEach(c => { if (serverOrders[c]) allClients.push({name:c, type:'normal'}); });
+  Object.keys(uploadedOrders).forEach(c => allClients.push({name:c, type:'upload'}));
+
+  if (allClients.length === 0) {
+    document.getElementById('picking-table').style.display = 'none';
+    document.getElementById('picking-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('picking-table').style.display = '';
+  document.getElementById('picking-empty').style.display = 'none';
+
+  // 인쇄용 제목
+  document.getElementById('picking-print-title').style.display = 'block';
+  document.getElementById('picking-print-date').style.display = 'block';
+  document.getElementById('picking-print-date').textContent = dateStr;
+
+  // 품목 목록 수집
+  const productMap = {}; // name → {clientName: qty, ...}
+
+  // 일반 주문
+  CLIENTS.forEach(c => {
+    if (!serverOrders[c]) return;
+    const o = serverOrders[c];
+    PRODUCTS_DEFAULT.forEach(p => {
+      const q = Number(o[p.id.trim()]||o[p.id]||0);
+      if (q > 0) {
+        if (!productMap[p.name]) productMap[p.name] = {unit:'BOX'};
+        productMap[p.name][c] = (productMap[p.name][c]||0) + q;
+      }
+    });
+  });
+
+  // 업로드 발주서
+  Object.keys(uploadedOrders).forEach(c => {
+    uploadedOrders[c].items.forEach(p => {
+      if (p.qty > 0) {
+        if (!productMap[p.name]) productMap[p.name] = {unit: p.unit||''};
+        productMap[p.name][c] = (productMap[p.name][c]||0) + p.qty;
+      }
+    });
+  });
+
+  const clientNames = allClients.map(c => c.name);
+  const products = Object.keys(productMap);
+
+  if (products.length === 0) {
+    document.getElementById('picking-empty').style.display = 'block';
+    return;
+  }
+
+  // 헤더
+  document.getElementById('picking-thead').innerHTML = `<tr>
+    <th style="min-width:140px">품목명</th>
+    ${clientNames.map(c=>`<th>${c}</th>`).join('')}
+    <th style="background:#444">합계</th>
+  </tr>`;
+
+  // 바디
+  let grandTotal = 0;
+  const colTotals = {};
+  clientNames.forEach(c => colTotals[c] = 0);
+
+  const bodyRows = products.map(name => {
+    const unit = productMap[name].unit || '';
+    const unitBadge = unit === 'BOX'
+      ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:600;margin-left:4px">BOX</span>`
+      : unit === 'EA'
+      ? `<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#FAEEDA;color:#854F0B;font-weight:600;margin-left:4px">EA</span>`
+      : '';
+    let rowTotal = 0;
+    const cells = clientNames.map(c => {
+      const q = productMap[name][c]||0;
+      rowTotal += q;
+      colTotals[c] += q;
+      return `<td class="${q>0?'has-qty':''}">${q>0?q:'-'}</td>`;
+    }).join('');
+    grandTotal += rowTotal;
+    return `<tr><td>${name}${unitBadge}</td>${cells}<td class="total-cell">${rowTotal}</td></tr>`;
+  }).join('');
+
+  // 합계 행
+  const totalCells = clientNames.map(c=>`<td style="font-weight:700">${colTotals[c]||0}</td>`).join('');
+  const totalRow = `<tr class="total-row"><td>합계</td>${totalCells}<td>${grandTotal}</td></tr>`;
+
+  document.getElementById('picking-tbody').innerHTML = bodyRows + totalRow;
+}
+
+let parsedUploadItems = [];
+
+function onFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const client = document.getElementById('upload-client').value;
+  if (!client) { alert('거래처를 먼저 선택해 주세요.'); input.value=''; return; }
+  document.getElementById('upload-filename').style.display = 'block';
+  document.getElementById('upload-filename').textContent = '📄 ' + file.name;
+  document.getElementById('upload-result').style.display = 'none';
+  document.getElementById('upload-error').style.display = 'none';
+  readAndAnalyze(file);
+}
+
+async function readAndAnalyze(file) {
+  document.getElementById('upload-loading').style.display = 'block';
+  document.getElementById('upload-result').style.display = 'none';
+  document.getElementById('upload-error').style.display = 'none';
+  try {
+    const text = await readFileAsText(file);
+    parsedUploadItems = parseOrderXls(text);
+    if (parsedUploadItems.length === 0) throw new Error('품목을 찾을 수 없습니다. 파일 형식을 확인해 주세요.');
+    document.getElementById('upload-loading').style.display = 'none';
+    document.getElementById('upload-result').style.display = 'block';
+    document.getElementById('recog-count').textContent = `총 ${parsedUploadItems.length}개 품목`;
+    document.getElementById('recog-list').innerHTML = parsedUploadItems.map((p,i) => `
+      <div class="order-item">
+        <div>
+          <div class="o-name" style="font-size:13px;font-weight:400">${p.name}</div>
+          ${p.unit ? `<span style="font-size:11px;padding:1px 7px;border-radius:20px;font-weight:600;${p.unit==='BOX'?'background:#E6F1FB;color:#185FA5':'background:#FAEEDA;color:#854F0B'}">${p.unit}</span>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="number" min="0" value="${p.qty}" style="width:60px;font-size:13px;padding:4px 6px;border:1px solid #ddd;border-radius:8px;text-align:center"
+            onchange="parsedUploadItems[${i}].qty=parseInt(this.value)||0">
+          <span style="font-size:12px;color:#aaa">${p.unit||'개'}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) {
+    document.getElementById('upload-loading').style.display = 'none';
+    document.getElementById('upload-error').style.display = 'block';
+    document.getElementById('upload-error').textContent = '오류: ' + err.message;
+  }
+}
+
+function parseOrderXls(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const rows = Array.from(doc.querySelectorAll('tr'));
+  const items = [];
+  let nameIdx = -1, qtyIdx = -1;
+
+  rows.forEach(row => {
+    const cells = Array.from(row.querySelectorAll('td,th')).map(c => c.innerText.trim());
+    if (cells.length === 0) return;
+
+    const nameCol = cells.findIndex(c => c === '상품명');
+    const qtyCol = cells.findIndex(c => c === '주문수' || c === '주문수량' || c === '수량');
+    if (nameCol !== -1 && qtyCol !== -1) {
+      nameIdx = nameCol; qtyIdx = qtyCol; return;
+    }
+
+    if (nameIdx !== -1 && cells[0] && /^\d+$/.test(cells[0].replace(/,/g,''))) {
+      const name = cells[nameIdx] || '';
+      const qtyRaw = cells[qtyIdx] || '0';
+      const qty = parseInt(qtyRaw.replace(/[^0-9]/g, '')) || 0;
+      const unit = qtyRaw.includes('BOX') ? 'BOX' : qtyRaw.includes('EA') ? 'EA' : '';
+      if (name && qty > 0) items.push({name, qty, unit});
+    }
+  });
+  return items;
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+let uploadedOrders = {}; // 업로드 발주서 메모리 저장
+
+async function saveUploadOrder() {
+  const client = document.getElementById('upload-client').value;
+  if (!client || parsedUploadItems.length === 0) return;
+
+  uploadedOrders[client] = {
+    items: parsedUploadItems.map(p => ({...p})),
+    time: new Date().toLocaleString('ko-KR')
+  };
+
+  alert(`${client} 발주서가 취합 현황에 추가되었습니다!`);
+  document.getElementById('upload-input').value = '';
+  document.getElementById('upload-filename').style.display = 'none';
+  document.getElementById('upload-result').style.display = 'none';
+  parsedUploadItems = [];
+}
+
+init();
+</script>
+</body>
+</html>
